@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jendral – Online Multiplayer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14172B;        
+  --ink-2:#1E2340;      
+  --ink-3:#2B3157;      
+  --ivory:#F3EEE2;      
+  --red:#D43A33;
+  --black:#17181D;
+  --brass:#D2A94F;      
+  --text:#ECE8F5;
+  --muted:#9AA0C4;
+  --card-w:clamp(54px,9vw,78px);
+  --card-h:calc(var(--card-w)*1.42);
+  --sans:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.4;
+  background-image:radial-gradient(120% 80% at 50% 45%,#222A55 0%,var(--ink) 65%)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+
+.screen{display:none;min-height:100vh;padding:18px;max-width:1000px;margin:0 auto}
+.screen.active{display:flex;flex-direction:column}
+
+/* ---------- LOBBY ---------- */
+.lobby{justify-content:center;align-items:center;gap:28px;text-align:center}
+.lobby h1{font-size:clamp(54px,12vw,104px);font-weight:800;letter-spacing:-.03em;margin:0;line-height:.9}
+.lobby h1 .suits{display:block;font-family:var(--serif);font-size:.32em;letter-spacing:.35em;margin-top:14px;color:var(--muted)}
+.lobby h1 .suits i{font-style:normal}.lobby h1 .suits .r{color:var(--red)}
+.lobby p.sub{margin:0;color:var(--muted);max-width:34ch}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:640px}
+@media(max-width:560px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:18px;padding:20px;text-align:left;display:flex;flex-direction:column;gap:12px}
+.panel h2{margin:0;font-size:18px}
+.panel p{margin:0;color:var(--muted);font-size:14px}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:600;background:var(--ink-3)}
+.btn.primary{background:var(--brass);color:#1b1500}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.field{display:flex;gap:8px}
+.field input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--ink-3);border-radius:12px;padding:12px;color:var(--text);
+  font:700 20px var(--serif);letter-spacing:.3em;text-transform:uppercase;text-align:center}
+.waiting{display:none;margin-top:4px;padding:12px;border-radius:12px;background:var(--ink);border:1px dashed var(--brass);text-align:center}
+.waiting.show{display:block}
+.waiting b{display:block;font:700 32px var(--serif);letter-spacing:.3em;color:var(--brass)}
+.waiting small{color:var(--muted)}
+
+/* ---------- MEJA ---------- */
+.game{gap:12px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.topbar .code{background:var(--ink-2);border:1px solid var(--ink-3);padding:5px 12px;border-radius:999px}
+.topbar .code b{color:var(--brass);font-family:var(--serif);letter-spacing:.2em;margin-left:6px}
+.topbar .conn::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#4CC38A;margin-right:6px}
+
+.opp{display:flex;align-items:center;gap:14px}
+.opp .who{min-width:92px}
+.opp .who b{display:block;font-size:15px}
+.opp .who span{color:var(--muted);font-size:13px}
+.fan{display:flex;padding-left:calc(var(--card-w)*.62)}
+.back{width:calc(var(--card-w)*.62);height:calc(var(--card-h)*.62);margin-left:calc(var(--card-w)*-.38);border-radius:7px;
+  border:2px solid var(--ivory);
+  background:repeating-linear-gradient(45deg,#3A4285 0 5px,#2A3066 5px 10px);box-shadow:0 2px 6px #0006}
+
+.table{flex:1;min-height:210px;border-radius:26px;background:radial-gradient(90% 90% at 50% 40%,#2A3170,#1A1F44);
+  border:1px solid var(--ink-3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
+.table .label{color:var(--muted);font-size:14px}
+.played{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.combo-name{font-weight:800;font-size:clamp(20px,4vw,28px);letter-spacing:-.01em}
+.status{max-width:44ch;color:var(--text);font-size:15px}
+.status em{font-style:normal;color:var(--brass);font-weight:600}
+.empty{color:var(--muted)}
+
+/* kartu */
+.card{position:relative;width:var(--card-w);height:var(--card-h);flex:none;background:var(--ivory);border-radius:9px;
+  box-shadow:0 2px 8px #0007;font-family:var(--serif);font-weight:700;color:var(--black);border:0;padding:0;text-align:left}
+.card.red{color:var(--red)}
+.card .c{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:1;font-size:calc(var(--card-w)*.27)}
+.card .c.tl{top:6px;left:6px}
+.card .c.br{bottom:6px;right:6px;transform:rotate(180deg)}
+.card .c small{font-size:.9em;margin-top:2px}
+.card .mid{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--card-w)*.5);opacity:.9;padding-top:6px}
+
+.hand-wrap{overflow-x:auto;padding:26px 10px 14px;margin:0 -10px;scrollbar-width:thin}
+.hand{display:flex;width:max-content;margin:0 auto;padding-left:calc(var(--card-w)*.55)}
+.hand .card{margin-left:calc(var(--card-w)*-.55);transition:transform .15s ease,box-shadow .15s ease}
+.hand .card:hover{transform:translateY(-6px)}
+.hand .card[aria-pressed="true"]{transform:translateY(-22px);box-shadow:0 0 0 3px var(--brass),0 8px 16px #000a;z-index:5}
+
+.actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ink-2);border:1px solid var(--ink-3);border-radius:18px;padding:12px 14px}
+.actions .hint{flex:1;min-width:180px;font-size:14px;color:var(--muted)}
+.actions .hint b{color:var(--text)}
+.actions .hint.ok b{color:#6FE0A6}
+.actions .hint.bad b{color:#FF8F89}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--brass);color:#1b1500;padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:999;}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- LOBBY -->
+<main id="lobby" class="screen lobby active">
+  <h1>Jendral<span class="suits" aria-hidden="true"><i>♣</i> <i class="r">♦</i> <i class="r">♥</i> <i>♠</i></span></h1>
+  <p class="sub">Kartu remi untuk dua pemain. Kartu habis duluan, Anda menang.</p>
+  <div class="panels">
+    <section class="panel">
+      <h2>Buat room</h2>
+      <p>Anda mendapat kode, lalu bagikan ke teman.</p>
+      <button class="btn primary" id="createRoom">Buat room baru</button>
+      <div class="waiting" id="waiting" role="status">
+        <small>Kode room Anda</small>
+        <b id="myRoomCode">---</b>
+        <small>Menunggu lawan bergabung…</small>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Masuk ke room</h2>
+      <p>Masukkan kode dari teman Anda.</p>
+      <div class="field">
+        <input aria-label="Kode room" maxlength="4" placeholder="ABCD" id="joinCode">
+        <button class="btn primary" id="joinBtn">Masuk</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- MEJA -->
+<main id="game" class="screen game">
+  <div class="topbar">
+    <span class="code">Room <b id="gameRoomCode"></b></span>
+    <span class="conn">Lawan terhubung</span>
+  </div>
+
+  <div class="opp">
+    <div class="who"><b>Lawan</b><span id="oppCount">24 kartu</span></div>
+    <div class="fan" id="fan" aria-hidden="true"></div>
+  </div>
+
+  <section class="table" aria-live="polite">
+    <div class="label" id="tableLabel"></div>
+    <div class="played" id="played"></div>
+    <div class="combo-name" id="comboName"></div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <div class="hand-wrap"><div class="hand" id="hand" role="group" aria-label="Kartu di tangan Anda"></div></div>
+
+  <div class="actions">
+    <div class="hint" id="hint"></div>
+    <button class="btn" id="pass">Pass</button>
+    <button class="btn primary" id="play" disabled>Turunkan</button>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<!-- SOCKET.IO CLIENT -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const $ = id => document.getElementById(id);
+
+let myHand = [];
+let tableState = null;
+let oppCount = 0;
+let isMyTurn = false;
+let currentCode = null;
+let selected = new Set();
+
+const RANKS=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
+const str=c=>c.r*4+c.s;
+
+/* ---- evaluator kombinasi ---- */
+function evalCombo(cs){
+  const n=cs.length; if(![2,3,5].includes(n)) return null;
+  const mx=Math.max(...cs.map(str));
+  const cnt={}; cs.forEach(c=>cnt[c.r]=(cnt[c.r]||0)+1);
+  const groups=Object.entries(cnt).map(([r,k])=>({r:+r,k})).sort((a,b)=>b.k-a.k||b.r-a.r);
+  if(n===2) return groups[0].k===2?{name:'Pair',n,tier:0,key:mx}:null;
+  if(n===3) return groups[0].k===3?{name:'Three of a kind',n,tier:0,key:mx}:null;
+  const flush=cs.every(c=>c.s===cs[0].s);
+  const vals=cs.map(c=>c.r).sort((a,b)=>a-b);
+  const straight=new Set(vals).size===5 && vals[4]-vals[0]===4 && vals[4]<=11;
+  if(straight&&flush) return{name:'Straight flush',n,tier:5,key:mx};
+  if(groups[0].k===4) return{name:'Four of a kind',n,tier:4,key:groups[0].r*4};
+  if(groups[0].k===3&&groups[1]&&groups[1].k===2){
+    const t=cs.filter(c=>c.r===groups[0].r); return{name:'Full house',n,tier:3,key:Math.max(...t.map(str))};
+  }
+  if(flush) return{name:'Flush',n,tier:2,key:mx};
+  if(straight) return{name:'Straight',n,tier:1,key:mx};
+  return null;
+}
+function beats(a,b){
+  if(!b) return true;
+  if(a.n!==b.n) return false;
+  if(a.n===5 && a.tier!==b.tier) return a.tier>b.tier;
+  return a.key>b.key;
+}
+
+/* ---- render ---- */
+function cardEl(c,btn){
+  const el=document.createElement(btn?'button':'div');
+  el.className='card'+(c.s===1||c.s===2?' red':'');
+  el.innerHTML=`<span class="c tl">${c.rank}<small>${c.suit}</small></span><span class="mid">${c.suit}</span><span class="c br">${c.rank}<small>${c.suit}</small></span>`;
+  if(btn){el.setAttribute('aria-label',c.rank+' '+c.suit);el.setAttribute('aria-pressed','false');}
+  return el;
+}
+function renderHand(){
+  const h=$('hand'); h.innerHTML='';
+  myHand.forEach(c=>{
+    const el=cardEl(c,true);
+    el.setAttribute('aria-pressed',selected.has(c.id));
+    el.onclick=()=>{selected.has(c.id)?selected.delete(c.id):selected.add(c.id);renderHand();renderActions();};
+    h.appendChild(el);
+  });
+}
+function renderFan(){
+  const f=$('fan'); f.innerHTML='';
+  // Limit the visual cards shown so it doesn't break UI for large hands
+  for(let i=0;i<Math.min(15,oppCount);i++){const b=document.createElement('div');b.className='back';f.appendChild(b);}
+  $('oppCount').textContent=oppCount+' kartu';
+}
+function renderTable(){
+  const p=$('played'); p.innerHTML='';
+  if(!tableState){
+    $('tableLabel').textContent='';
+    $('comboName').textContent='';
+    p.innerHTML='<div class="empty">Meja kosong</div>';
+    $('status').innerHTML= isMyTurn 
+        ? '<em>Giliran Anda.</em> Turunkan kombinasi apa saja: pair, three of a kind, atau 5 kartu.'
+        : 'Menunggu lawan bermain...';
+    return;
+  }
+  
+  tableState.cards.forEach(c=>p.appendChild(cardEl(c)));
+  const e=evalCombo(tableState.cards);
+  $('comboName').textContent=e.name;
+  
+  const isMine = tableState.by === socket.id;
+  
+  if(!isMine){
+    $('tableLabel').textContent='Lawan menurunkan';
+    $('status').innerHTML= isMyTurn 
+      ? (e.n===5 ? '<em>Giliran Anda.</em> Balas dengan tangan 5 kartu yang lebih tinggi, atau pass.' : `<em>Giliran Anda.</em> Balas dengan ${e.name.toLowerCase()} yang lebih tinggi, atau pass.`)
+      : 'Menunggu giliran...';
+  }else{
+    $('tableLabel').textContent='Anda menurunkan';
+    $('status').innerHTML='Menunggu lawan membalas…';
+  }
+}
+function renderActions(){
+  const cs=myHand.filter(c=>selected.has(c.id));
+  const hint=$('hint'), play=$('play'), pass=$('pass');
+  hint.className='hint';
+  const e=evalCombo(cs);
+  let ok=false;
+  
+  if(!isMyTurn) {
+      hint.innerHTML = 'Menunggu giliran lawan.';
+  } else {
+      if(!cs.length){hint.innerHTML='Pilih 2, 3, atau 5 kartu.';}
+      else if(!e){hint.className='hint bad';hint.innerHTML=`<b>${cs.length} kartu dipilih.</b> Bukan kombinasi yang sah.`;}
+      else if(tableState && tableState.by !== socket.id && !beats(e,evalCombo(tableState.cards))){
+        hint.className='hint bad';hint.innerHTML=`<b>${e.name}</b> belum cukup tinggi untuk menandingi.`;}
+      else{ok=true;hint.className='hint ok';hint.innerHTML=`<b>${e.name}</b> siap diturunkan.`;}
+  }
+  
+  play.disabled=!(ok&&isMyTurn);
+  // Bisa pass jika ini giliranku dan yang main di meja bukan aku (bukan ronde baru yg aku kuasai)
+  pass.disabled=!(isMyTurn && tableState && tableState.by !== socket.id);
+}
+
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2800);}
+function renderAll(){renderHand();renderFan();renderTable();renderActions();}
+
+/* ---- Aksi Client ke Server ---- */
+$('createRoom').onclick = () => {
+    socket.emit('createRoom');
+};
+$('joinBtn').onclick = () => {
+    const code = $('joinCode').value.toUpperCase();
+    if(code) {
+        socket.emit('joinRoom', code);
+    }
+};
+
+$('play').onclick=()=>{
+  const cs=myHand.filter(c=>selected.has(c.id));
+  selected.clear();
+  socket.emit('playCard', { code: currentCode, cards: cs });
+};
+$('pass').onclick=()=>{
+  selected.clear();
+  socket.emit('pass', currentCode);
+};
+
+/* ---- Listeners Socket.IO ---- */
+socket.on('roomCreated', (code) => {
+    $('waiting').classList.add('show');
+    $('myRoomCode').textContent = code;
+});
+
+socket.on('gameStarted', ({ code }) => {
+    currentCode = code;
+    $('lobby').classList.remove('active');
+    $('game').classList.add('active');
+    $('gameRoomCode').textContent = code;
+    toast('Permainan dimulai!');
+});
+
+socket.on('gameState', (state) => {
+    myHand = state.hand;
+    oppCount = state.oppCount;
+    tableState = state.table;
+    isMyTurn = state.myTurn;
+    
+    if(state.passed) {
+        toast('Lawan memilih Pass. Giliran Anda membuka kartu baru.');
+    }
+    
+    renderAll();
+});
+
+socket.on('gameOver', ({ winner }) => {
+    if(winner === socket.id) {
+        toast('Kartu Anda habis. ANDA MENANG! 🎉');
+    } else {
+        toast('Lawan kehabisan kartu. ANDA KALAH. 🥲');
+    }
+    setTimeout(() => {
+        location.reload(); 
+    }, 4000);
+});
+
+socket.on('errorMsg', (msg) => {
+    toast(msg);
+});
+
+</script>
+</body>
+</html>
