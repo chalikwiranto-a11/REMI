@@ -35,9 +35,51 @@ function generateDeck() {
 
 // Simpan state semua room di memori server
 const rooms = {};
+// Track pemain → kode room (supaya bisa cleanup saat disconnect)
+const playerRoom = {};
 
 function generateRoomCode() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
+    let code;
+    // Pastikan kode unik
+    do {
+        code = Math.random().toString(36).substring(2, 6).toUpperCase();
+    } while (rooms[code]);
+    return code;
+}
+
+// Fungsi helper: keluarkan pemain dari room lama sebelum masuk room baru
+function leaveCurrentRoom(socketId) {
+    const oldCode = playerRoom[socketId];
+    if (oldCode && rooms[oldCode]) {
+        const oldRoom = rooms[oldCode];
+        // Beritahu pemain lain di room lama
+        const others = oldRoom.players.filter(id => id !== socketId);
+        others.forEach(pid => {
+            io.to(pid).emit('errorMsg', 'Lawan keluar dari room.');
+            // Bersihkan mapping pemain lain juga
+            delete playerRoom[pid];
+        });
+        delete rooms[oldCode];
+        console.log(`Room ${oldCode} dihapus karena pemain ${socketId} keluar.`);
+    }
+    delete playerRoom[socketId];
+}
+
+// Helper: kirim gameState ke semua pemain di room
+function broadcastGameState(code, extra) {
+    const room = rooms[code];
+    if (!room) return;
+    room.players.forEach(pid => {
+        const oppId = room.players.find(id => id !== pid);
+        io.to(pid).emit('gameState', {
+            hand: room.hands[pid],
+            oppCount: oppId ? room.hands[oppId].length : 0,
+            table: room.table,
+            myTurn: room.turn === pid,
+            passCount: room.passCount,
+            ...extra
+        });
+    });
 }
 
 io.on('connection', (socket) => {
@@ -45,6 +87,9 @@ io.on('connection', (socket) => {
 
     // 1. Membuat Room
     socket.on('createRoom', () => {
+        // Keluarkan dari room lama jika ada
+        leaveCurrentRoom(socket.id);
+
         const code = generateRoomCode();
         rooms[code] = {
             players: [socket.id],
@@ -54,56 +99,85 @@ io.on('connection', (socket) => {
             turn: null,
             passCount: 0
         };
+        playerRoom[socket.id] = code;
         socket.join(code);
         socket.emit('roomCreated', code);
+        console.log(`Room ${code} dibuat oleh ${socket.id}`);
     });
 
     // 2. Gabung ke Room
     socket.on('joinRoom', (code) => {
-        const room = rooms[code];
-        if (room && room.players.length === 1 && room.state === 'waiting') {
-            room.players.push(socket.id);
-            socket.join(code);
-            room.state = 'playing';
-            
-            // Bagi kartu untuk 2 pemain
-            const deck = generateDeck();
-            const hand1 = deck.slice(0, 26).sort((a,b) => str(a) - str(b));
-            const hand2 = deck.slice(26, 52).sort((a,b) => str(a) - str(b));
-            
-            room.hands[room.players[0]] = hand1;
-            room.hands[room.players[1]] = hand2;
-            
-            // Pemain pertama yang membuat room jalan duluan
-            room.turn = room.players[0];
-
-            // Beritahu kedua pemain bahwa game dimulai
-            io.to(code).emit('gameStarted', { code });
-            
-            // Kirim state spesifik ke masing-masing pemain
-            room.players.forEach(pid => {
-                const oppId = room.players.find(id => id !== pid);
-                io.to(pid).emit('gameState', {
-                    hand: room.hands[pid],
-                    oppCount: room.hands[oppId].length,
-                    table: room.table,
-                    myTurn: room.turn === pid,
-                    passCount: room.passCount
-                });
-            });
-
-        } else {
-            socket.emit('errorMsg', 'Kode salah, room penuh, atau sedang bermain.');
+        if (!code || typeof code !== 'string') {
+            socket.emit('errorMsg', 'Kode room tidak valid.');
+            return;
         }
+        code = code.toUpperCase().trim();
+
+        const room = rooms[code];
+        if (!room) {
+            socket.emit('errorMsg', 'Room tidak ditemukan. Cek kodenya lagi.');
+            return;
+        }
+        if (room.state !== 'waiting') {
+            socket.emit('errorMsg', 'Room sedang bermain. Tunggu sampai selesai.');
+            return;
+        }
+        if (room.players.length >= 2) {
+            socket.emit('errorMsg', 'Room sudah penuh.');
+            return;
+        }
+        if (room.players.includes(socket.id)) {
+            socket.emit('errorMsg', 'Anda sudah ada di room ini.');
+            return;
+        }
+
+        // Keluarkan dari room lama jika ada
+        leaveCurrentRoom(socket.id);
+
+        // Cek apakah pemain pertama (pembuat room) masih terhubung
+        const creatorId = room.players[0];
+        const creatorSocket = io.sockets.sockets.get(creatorId);
+        if (!creatorSocket || !creatorSocket.connected) {
+            // Pembuat room sudah disconnect, hapus room zombie ini
+            delete rooms[code];
+            delete playerRoom[creatorId];
+            socket.emit('errorMsg', 'Room sudah tidak aktif (pembuat room terputus). Minta kode baru.');
+            return;
+        }
+
+        room.players.push(socket.id);
+        playerRoom[socket.id] = code;
+        socket.join(code);
+        room.state = 'playing';
+        
+        // Bagi kartu untuk 2 pemain
+        const deck = generateDeck();
+        const hand1 = deck.slice(0, 26).sort((a,b) => str(a) - str(b));
+        const hand2 = deck.slice(26, 52).sort((a,b) => str(a) - str(b));
+        
+        room.hands[room.players[0]] = hand1;
+        room.hands[room.players[1]] = hand2;
+        
+        // Pemain pertama yang membuat room jalan duluan
+        room.turn = room.players[0];
+
+        // Beritahu kedua pemain bahwa game dimulai
+        io.to(code).emit('gameStarted', { code });
+        
+        // Kirim state spesifik ke masing-masing pemain
+        broadcastGameState(code);
+
+        console.log(`Pemain ${socket.id} bergabung ke room ${code}. Game dimulai!`);
     });
 
     // 3. Menurunkan Kartu
     socket.on('playCard', ({ code, cards }) => {
         const room = rooms[code];
-        if(!room || room.turn !== socket.id) return; // Abaikan jika bukan gilirannya
+        if(!room || room.state !== 'playing' || room.turn !== socket.id) return;
         
         // Hapus kartu dari tangan pemain
         const myHand = room.hands[socket.id];
+        if (!myHand) return;
         const cardIds = cards.map(c => c.id);
         room.hands[socket.id] = myHand.filter(c => !cardIds.includes(c.id));
         
@@ -123,60 +197,70 @@ io.on('connection', (socket) => {
         // Cek kondisi menang
         if(room.hands[socket.id].length === 0) {
             io.to(code).emit('gameOver', { winner: socket.id });
-            delete rooms[code]; // Hapus room jika selesai
+            // Bersihkan mapping kedua pemain
+            room.players.forEach(pid => delete playerRoom[pid]);
+            delete rooms[code];
+            console.log(`Game selesai di room ${code}. Pemenang: ${socket.id}`);
             return;
         }
 
-        // Broadcast state terbaru ke masing-masing pemain
-        room.players.forEach(pid => {
-            io.to(pid).emit('gameState', {
-                hand: room.hands[pid],
-                oppCount: room.hands[room.players.find(id => id !== pid)].length,
-                table: room.table,
-                myTurn: room.turn === pid,
-                passCount: room.passCount
-            });
-        });
+        // Broadcast state terbaru
+        broadcastGameState(code);
     });
 
     // 4. Melewati Giliran (Pass)
     socket.on('pass', (code) => {
         const room = rooms[code];
-        if(!room || room.turn !== socket.id) return;
+        if(!room || room.state !== 'playing' || room.turn !== socket.id) return;
         
         room.passCount++;
         const oppId = room.players.find(id => id !== socket.id);
         
-        // Jika 1 pemain (lawan) pass, meja dibersihkan dan yang barusan main dapat giliran bebas
+        // Jika pemain pass, meja dibersihkan dan lawan dapat giliran bebas
         if (room.passCount >= 1) {
             room.table = null; 
-            room.turn = oppId; // Giliran kembali ke pemain yang terakhir buang kartu
+            room.turn = oppId;
             room.passCount = 0;
         }
 
-        room.players.forEach(pid => {
-            io.to(pid).emit('gameState', {
-                hand: room.hands[pid],
-                oppCount: room.hands[room.players.find(id => id !== pid)].length,
-                table: room.table,
-                myTurn: room.turn === pid,
-                passCount: room.passCount,
-                passed: true
-            });
+        broadcastGameState(code, { passed: true });
+    });
+
+    // 5. Chat / Emoji
+    socket.on('chatMsg', ({ code, text }) => {
+        if (!code || !text) return;
+        const room = rooms[code];
+        if(!room || !room.players.includes(socket.id)) return;
+        io.to(code).emit('chatMsg', {
+            from: socket.id,
+            text: text.substring(0, 200), // limit panjang pesan
+            ts: Date.now()
         });
     });
 
-    // 5. Pemain Keluar / Disconnect
+    // 6. Pemain Keluar / Disconnect
     socket.on('disconnect', () => {
         console.log('Pemain terputus:', socket.id);
-        for(let code in rooms) {
-            if(rooms[code].players.includes(socket.id)) {
-                io.to(code).emit('errorMsg', 'Lawan terputus koneksinya dari permainan.');
-                delete rooms[code];
-            }
-        }
+        leaveCurrentRoom(socket.id);
     });
 });
+
+// Bersihkan room zombie secara berkala (setiap 60 detik)
+setInterval(() => {
+    for (const code in rooms) {
+        const room = rooms[code];
+        // Cek apakah semua pemain masih terhubung
+        const allDisconnected = room.players.every(pid => {
+            const s = io.sockets.sockets.get(pid);
+            return !s || !s.connected;
+        });
+        if (allDisconnected) {
+            room.players.forEach(pid => delete playerRoom[pid]);
+            delete rooms[code];
+            console.log(`Room zombie ${code} dibersihkan.`);
+        }
+    }
+}, 60000);
 
 // Menjalankan server pada port dinamis (untuk Railway/Render/dsb) atau 3000 untuk lokal
 const PORT = process.env.PORT || 3000;

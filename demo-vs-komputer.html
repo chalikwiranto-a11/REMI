@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jendral – Online Multiplayer</title>
+<title>Jendral – Demo vs Komputer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#14172B;        
-  --ink-2:#1E2340;      
-  --ink-3:#2B3157;      
-  --ivory:#F3EEE2;      
+  --ink:#14172B;
+  --ink-2:#1E2340;
+  --ink-3:#2B3157;
+  --ivory:#F3EEE2;
   --red:#D43A33;
   --black:#17181D;
-  --brass:#D2A94F;      
+  --brass:#D2A94F;
   --text:#ECE8F5;
   --muted:#9AA0C4;
   --card-w:clamp(54px,9vw,78px);
@@ -29,7 +29,9 @@ body{background:var(--ink);color:var(--text);font-family:var(--sans);font-size:1
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--brass);outline-offset:2px}
 
-.screen{display:none;min-height:100vh;padding:18px;max-width:1000px;margin:0 auto}
+.demo-badge{position:fixed;top:0;left:0;right:0;text-align:center;padding:8px;background:linear-gradient(90deg,#D2A94F,#e8c56a);color:#1b1500;font-weight:700;font-size:13px;z-index:100;letter-spacing:.04em}
+
+.screen{display:none;min-height:100vh;padding:18px;padding-top:50px;max-width:1000px;margin:0 auto}
 .screen.active{display:flex;flex-direction:column}
 
 /* ---------- LOBBY ---------- */
@@ -38,28 +40,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .lobby h1 .suits{display:block;font-family:var(--serif);font-size:.32em;letter-spacing:.35em;margin-top:14px;color:var(--muted)}
 .lobby h1 .suits i{font-style:normal}.lobby h1 .suits .r{color:var(--red)}
 .lobby p.sub{margin:0;color:var(--muted);max-width:34ch}
-.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:640px}
-@media(max-width:560px){.panels{grid-template-columns:1fr}}
-.panel{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:18px;padding:20px;text-align:left;display:flex;flex-direction:column;gap:12px}
-.panel h2{margin:0;font-size:18px}
-.panel p{margin:0;color:var(--muted);font-size:14px}
-.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:600;background:var(--ink-3)}
+.btn{border:0;border-radius:12px;padding:14px 28px;font-weight:600;background:var(--ink-3);font-size:16px}
 .btn.primary{background:var(--brass);color:#1b1500}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.field{display:flex;gap:8px}
-.field input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--ink-3);border-radius:12px;padding:12px;color:var(--text);
-  font:700 20px var(--serif);letter-spacing:.3em;text-transform:uppercase;text-align:center}
-.waiting{display:none;margin-top:4px;padding:12px;border-radius:12px;background:var(--ink);border:1px dashed var(--brass);text-align:center}
-.waiting.show{display:block}
-.waiting b{display:block;font:700 32px var(--serif);letter-spacing:.3em;color:var(--brass)}
-.waiting small{color:var(--muted)}
+.btn.primary:hover{background:#e0b95e}
 
 /* ---------- MEJA ---------- */
 .game{gap:12px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:14px}
 .topbar .code{background:var(--ink-2);border:1px solid var(--ink-3);padding:5px 12px;border-radius:999px}
 .topbar .code b{color:var(--brass);font-family:var(--serif);letter-spacing:.2em;margin-left:6px}
-.topbar .conn::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#4CC38A;margin-right:6px}
+.topbar .conn{display:flex;align-items:center;gap:6px}
+.topbar .conn::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#4CC38A}
 
 .opp{display:flex;align-items:center;gap:14px}
 .opp .who{min-width:92px}
@@ -100,7 +92,25 @@ button{font:inherit;color:inherit;cursor:pointer}
 .actions .hint b{color:var(--text)}
 .actions .hint.ok b{color:#6FE0A6}
 .actions .hint.bad b{color:#FF8F89}
-.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--brass);color:#1b1500;padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:999;}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--brass);color:#1b1500;padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:999}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* revolusi banner */
+.revolusi-banner{display:none;text-align:center;padding:10px 16px;border-radius:14px;font-weight:700;font-size:15px;letter-spacing:.02em;
+  background:linear-gradient(135deg,#FF4444,#CC2200);color:#fff;border:2px solid #FF6655;
+  animation:revolusi-pulse 1.5s ease-in-out infinite alternate}
+.revolusi-banner.active{display:block}
+.revolusi-banner .order{font-size:13px;font-weight:400;opacity:.9;margin-top:4px;display:block}
+@keyframes revolusi-pulse{0%{box-shadow:0 0 8px #FF444466}100%{box-shadow:0 0 20px #FF4444AA}}
+
+/* game over overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,12,30,.85);z-index:200;justify-content:center;align-items:center;flex-direction:column;gap:20px;text-align:center}
+.overlay.active{display:flex}
+.overlay h2{font-size:clamp(32px,8vw,56px);margin:0;font-weight:800}
+.overlay p{color:var(--muted);font-size:18px;margin:0}
+.overlay .win{color:#6FE0A6}
+.overlay .lose{color:#FF8F89}
+
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 /* ---------- CHAT PANEL ---------- */
@@ -137,41 +147,26 @@ button{font:inherit;color:inherit;cursor:pointer}
 </head>
 <body>
 
+<div class="demo-badge">🤖 MODE DEMO — Anda vs Komputer (Buka file ini langsung di browser, tanpa server)</div>
+
 <!-- LOBBY -->
 <main id="lobby" class="screen lobby active">
   <h1>Jendral<span class="suits" aria-hidden="true"><i>♣</i> <i class="r">♦</i> <i class="r">♥</i> <i>♠</i></span></h1>
   <p class="sub">Kartu remi untuk dua pemain. Kartu habis duluan, Anda menang.</p>
-  <div class="panels">
-    <section class="panel">
-      <h2>Buat room</h2>
-      <p>Anda mendapat kode, lalu bagikan ke teman.</p>
-      <button class="btn primary" id="createRoom">Buat room baru</button>
-      <div class="waiting" id="waiting" role="status">
-        <small>Kode room Anda</small>
-        <b id="myRoomCode">---</b>
-        <small>Menunggu lawan bergabung…</small>
-      </div>
-    </section>
-    <section class="panel">
-      <h2>Masuk ke room</h2>
-      <p>Masukkan kode dari teman Anda.</p>
-      <div class="field">
-        <input aria-label="Kode room" maxlength="4" placeholder="ABCD" id="joinCode">
-        <button class="btn primary" id="joinBtn">Masuk</button>
-      </div>
-    </section>
-  </div>
+  <button class="btn primary" id="startGame" style="margin-top:10px;font-size:18px;padding:16px 40px">▶ Mulai Main vs Komputer</button>
 </main>
 
 <!-- MEJA -->
 <main id="game" class="screen game">
   <div class="topbar">
-    <span class="code">Room <b id="gameRoomCode"></b></span>
-    <span class="conn">Lawan terhubung</span>
+    <span class="code">Mode<b>DEMO</b></span>
+    <span class="conn">Komputer terhubung</span>
   </div>
 
+  <div class="revolusi-banner" id="revolusiBanner">⚡ REVOLUSI! Urutan kartu terbalik!<span class="order">Urutan: 2 (terendah) → 3 (tertinggi)</span></div>
+
   <div class="opp">
-    <div class="who"><b>Lawan</b><span id="oppCount">24 kartu</span></div>
+    <div class="who"><b>🤖 Komputer</b><span id="oppCount">26 kartu</span></div>
     <div class="fan" id="fan" aria-hidden="true"></div>
   </div>
 
@@ -210,25 +205,55 @@ button{font:inherit;color:inherit;cursor:pointer}
   </div>
 </main>
 
+<!-- GAME OVER OVERLAY -->
+<div class="overlay" id="overlay">
+  <h2 id="resultTitle"></h2>
+  <p id="resultMsg"></p>
+  <button class="btn primary" onclick="location.reload()" style="font-size:16px;padding:14px 32px">🔄 Main Lagi</button>
+</div>
+
 <div class="toast" id="toast" role="status"></div>
 
-<!-- SOCKET.IO CLIENT -->
-<script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
-const $ = id => document.getElementById(id);
+/* ========= SETUP KARTU ========= */
+const RANKS=['3','4','5','6','7','8','9','10','J','Q','K','A','2']; // 2 tertinggi
+const SUITS=['♣','♦','♥','♠']; // ♣ terendah, ♠ tertinggi
+const mk=s=>{const su=s.slice(-1),r=s.slice(0,-1);return{id:s,r:RANKS.indexOf(r),s:SUITS.indexOf(su),rank:r,suit:su}};
+const $=id=>document.getElementById(id);
 
-let myHand = [];
-let tableState = null;
-let oppCount = 0;
-let isMyTurn = false;
-let currentCode = null;
-let selected = new Set();
+/* ========= GAME STATE ========= */
+let myHand=[], oppHand=[];
+let table=null; // {cards:[], by:'anda'|'komputer'}
+let isMyTurn=true;
+let selected=new Set();
+let gameOver=false;
+let reversed=false; // REVOLUSI: urutan terbalik saat Four of a Kind dimainkan
 
-const RANKS=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
-const str=c=>c.r*4+c.s;
+// Fungsi str dinamis: menghitung kekuatan kartu berdasarkan state reversed
+const str=c=> reversed ? (12 - c.r) * 4 + c.s : c.r * 4 + c.s;
 
-/* ---- evaluator kombinasi ---- */
+// Toggle revolusi dan re-sort semua tangan
+function triggerRevolusi(){
+  reversed = !reversed;
+  myHand.sort((a,b) => str(a) - str(b));
+  oppHand.sort((a,b) => str(a) - str(b));
+  $('revolusiBanner').classList.toggle('active', reversed);
+  if(reversed){
+    toast('⚡ REVOLUSI! Urutan terbalik — 3 tertinggi, 2 terendah!');
+  } else {
+    toast('⚡ REVOLUSI BERAKHIR! Urutan kembali normal — 2 tertinggi, 3 terendah.');
+  }
+}
+
+/* ========= GENERATE & SHUFFLE DECK ========= */
+function generateDeck(){
+  let deck=[];
+  for(let r of RANKS) for(let s of SUITS) deck.push(mk(r+s));
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  return deck;
+}
+
+/* ========= EVALUATOR KOMBINASI ========= */
 function evalCombo(cs){
   const n=cs.length; if(![1,2,3,5].includes(n)) return null;
   const mx=Math.max(...cs.map(str));
@@ -256,7 +281,7 @@ function beats(a,b){
   return a.key>b.key;
 }
 
-/* ---- render ---- */
+/* ========= RENDER FUNCTIONS ========= */
 function cardEl(c,btn){
   const el=document.createElement(btn?'button':'div');
   el.className='card'+(c.s===1||c.s===2?' red':'');
@@ -269,42 +294,44 @@ function renderHand(){
   myHand.forEach(c=>{
     const el=cardEl(c,true);
     el.setAttribute('aria-pressed',selected.has(c.id));
-    el.onclick=()=>{selected.has(c.id)?selected.delete(c.id):selected.add(c.id);renderHand();renderActions();};
+    el.onclick=()=>{
+      if(!isMyTurn||gameOver) return;
+      selected.has(c.id)?selected.delete(c.id):selected.add(c.id);
+      renderHand();renderActions();
+    };
     h.appendChild(el);
   });
 }
 function renderFan(){
   const f=$('fan'); f.innerHTML='';
-  // Limit the visual cards shown so it doesn't break UI for large hands
-  for(let i=0;i<Math.min(15,oppCount);i++){const b=document.createElement('div');b.className='back';f.appendChild(b);}
-  $('oppCount').textContent=oppCount+' kartu';
+  for(let i=0;i<Math.min(15,oppHand.length);i++){const b=document.createElement('div');b.className='back';f.appendChild(b);}
+  $('oppCount').textContent=oppHand.length+' kartu';
 }
 function renderTable(){
   const p=$('played'); p.innerHTML='';
-  if(!tableState){
+  if(!table){
     $('tableLabel').textContent='';
     $('comboName').textContent='';
     p.innerHTML='<div class="empty">Meja kosong</div>';
-    $('status').innerHTML= isMyTurn 
+    $('status').innerHTML= isMyTurn
         ? '<em>Giliran Anda.</em> Turunkan 1 kartu, pair, three of a kind, atau 5 kartu.'
-        : 'Menunggu lawan bermain...';
+        : '🤖 Komputer sedang berpikir…';
     return;
   }
-  
-  tableState.cards.forEach(c=>p.appendChild(cardEl(c)));
-  const e=evalCombo(tableState.cards);
+  table.cards.forEach(c=>p.appendChild(cardEl(c)));
+  const e=evalCombo(table.cards);
+  if(!e) return;
   $('comboName').textContent=e.name;
-  
-  const isMine = tableState.by === socket.id;
-  
-  if(!isMine){
-    $('tableLabel').textContent='Lawan menurunkan';
-    $('status').innerHTML= isMyTurn 
-      ? (e.n===5 ? '<em>Giliran Anda.</em> Balas dengan tangan 5 kartu yang lebih tinggi, atau pass.' : `<em>Giliran Anda.</em> Balas dengan ${e.name.toLowerCase()} yang lebih tinggi, atau pass.`)
-      : 'Menunggu giliran...';
+  if(table.by==='komputer'){
+    $('tableLabel').textContent='🤖 Komputer menurunkan';
+    $('status').innerHTML= isMyTurn
+      ? (e.n===1 ? '<em>Giliran Anda.</em> Balas dengan 1 kartu yang lebih tinggi, atau pass.'
+        : e.n===5 ? '<em>Giliran Anda.</em> Balas dengan 5 kartu yang lebih tinggi, atau pass.'
+        : `<em>Giliran Anda.</em> Balas dengan ${e.name.toLowerCase()} yang lebih tinggi, atau pass.`)
+      : '🤖 Komputer sedang berpikir…';
   }else{
     $('tableLabel').textContent='Anda menurunkan';
-    $('status').innerHTML='Menunggu lawan membalas…';
+    $('status').innerHTML='🤖 Komputer sedang berpikir…';
   }
 }
 function renderActions(){
@@ -313,128 +340,206 @@ function renderActions(){
   hint.className='hint';
   const e=evalCombo(cs);
   let ok=false;
-  
-  if(!isMyTurn) {
-      hint.innerHTML = 'Menunggu giliran lawan.';
+  if(!isMyTurn||gameOver){
+    hint.innerHTML='Menunggu giliran komputer.';
   } else {
-      if(!cs.length){hint.innerHTML='Pilih 1, 2, 3, atau 5 kartu.';}
-      else if(!e){hint.className='hint bad';hint.innerHTML=`<b>${cs.length} kartu dipilih.</b> Bukan kombinasi yang sah.`;}
-      else if(tableState && tableState.by !== socket.id && !beats(e,evalCombo(tableState.cards))){
-        hint.className='hint bad';hint.innerHTML=`<b>${e.name}</b> belum cukup tinggi untuk menandingi.`;}
-      else{ok=true;hint.className='hint ok';hint.innerHTML=`<b>${e.name}</b> siap diturunkan.`;}
+    if(!cs.length){hint.innerHTML='Pilih 1, 2, 3, atau 5 kartu.';}
+    else if(!e){hint.className='hint bad';hint.innerHTML=`<b>${cs.length} kartu dipilih.</b> Bukan kombinasi yang sah.`;}
+    else if(table && table.by==='komputer' && !beats(e,evalCombo(table.cards))){
+      hint.className='hint bad';hint.innerHTML=`<b>${e.name}</b> belum cukup tinggi untuk menandingi.`;}
+    else{ok=true;hint.className='hint ok';hint.innerHTML=`<b>${e.name}</b> siap diturunkan.`;}
   }
-  
-  play.disabled=!(ok&&isMyTurn);
-  // Bisa pass jika ini giliranku dan yang main di meja bukan aku (bukan ronde baru yg aku kuasai)
-  pass.disabled=!(isMyTurn && tableState && tableState.by !== socket.id);
+  play.disabled=!(ok&&isMyTurn&&!gameOver);
+  pass.disabled=!(isMyTurn && !gameOver && table && table.by==='komputer');
+}
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2800);}
+function renderAll(){renderHand();renderFan();renderTable();renderActions();$('revolusiBanner').classList.toggle('active',reversed);}
+
+/* ========= CHECK WIN ========= */
+function checkWin(who){
+  if(who==='anda' && myHand.length===0){
+    gameOver=true;
+    $('resultTitle').className='win';
+    $('resultTitle').textContent='🎉 ANDA MENANG!';
+    $('resultMsg').textContent='Selamat! Kartu Anda habis duluan.';
+    $('overlay').classList.add('active');
+    return true;
+  }
+  if(who==='komputer' && oppHand.length===0){
+    gameOver=true;
+    $('resultTitle').className='lose';
+    $('resultTitle').textContent='😔 ANDA KALAH';
+    $('resultMsg').textContent='Komputer kehabisan kartu duluan.';
+    $('overlay').classList.add('active');
+    return true;
+  }
+  return false;
 }
 
-function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2800);}
-function renderAll(){renderHand();renderFan();renderTable();renderActions();}
+/* ========= AI KOMPUTER (Sederhana) ========= */
+function aiPlay(){
+  if(gameOver) return;
+  isMyTurn=false;
+  renderAll();
 
-/* ---- Aksi Client ke Server ---- */
-$('createRoom').onclick = () => {
-    $('createRoom').disabled = true;
-    $('createRoom').textContent = 'Membuat room…';
-    socket.emit('createRoom');
-};
-$('joinBtn').onclick = () => {
-    const code = $('joinCode').value.toUpperCase().trim();
-    if(code) {
-        $('joinBtn').disabled = true;
-        $('joinBtn').textContent = 'Menghubungkan…';
-        socket.emit('joinRoom', code);
+  setTimeout(()=>{
+    if(gameOver) return;
+
+    if(!table || table.by==='komputer'){
+      // Komputer membuka ronde baru: mainkan kartu terkecil (1 kartu)
+      table=null; // bersihkan meja jika komputer yang terakhir main
+      const card=oppHand[0]; // kartu terkecil
+      oppHand=oppHand.filter(c=>c.id!==card.id);
+      table={cards:[card], by:'komputer'};
+      toast(`🤖 Komputer menurunkan ${card.rank}${card.suit}`);
+      if(checkWin('komputer')){renderAll();return;}
+      isMyTurn=true;
+      renderAll();
+      return;
     }
-};
 
-$('play').onclick=()=>{
-  if(!isMyTurn) return;
-  const cs=myHand.filter(c=>selected.has(c.id));
-  if(!cs.length) return;
-  selected.clear();
-  socket.emit('playCard', { code: currentCode, cards: cs });
-};
-$('pass').onclick=()=>{
-  if(!isMyTurn) return;
-  selected.clear();
-  socket.emit('pass', currentCode);
-};
+    // Komputer harus menandingi kartu di meja (yang dimainkan oleh 'anda')
+    const tableCombo=evalCombo(table.cards);
+    if(!tableCombo){isMyTurn=true;renderAll();return;}
 
-/* ---- Listeners Socket.IO ---- */
-socket.on('roomCreated', (code) => {
-    currentCode = code;
-    $('waiting').classList.add('show');
-    $('myRoomCode').textContent = code;
-});
+    const n=tableCombo.n;
+    let bestMove=null;
 
-socket.on('gameStarted', ({ code }) => {
-    currentCode = code;
-    $('lobby').classList.remove('active');
-    $('game').classList.add('active');
-    $('gameRoomCode').textContent = code;
-    toast('Permainan dimulai!');
-});
-
-socket.on('gameState', (state) => {
-    myHand = state.hand;
-    oppCount = state.oppCount;
-    tableState = state.table;
-    isMyTurn = state.myTurn;
-    
-    if(state.passed) {
-        toast('Lawan memilih Pass. Giliran Anda membuka kartu baru.');
+    if(n===1){
+      // Cari 1 kartu yang lebih tinggi
+      for(const c of oppHand){
+        const combo=evalCombo([c]);
+        if(combo && beats(combo,tableCombo)){bestMove=[c];break;}
+      }
+    } else if(n===2){
+      // Cari pair yang lebih tinggi
+      const cnt={};
+      oppHand.forEach(c=>{ if(!cnt[c.r]) cnt[c.r]=[]; cnt[c.r].push(c); });
+      for(const r in cnt){
+        if(cnt[r].length>=2){
+          const pair=cnt[r].slice(0,2);
+          const combo=evalCombo(pair);
+          if(combo && beats(combo,tableCombo)){bestMove=pair;break;}
+        }
+      }
+    } else if(n===3){
+      // Cari three of a kind yang lebih tinggi
+      const cnt={};
+      oppHand.forEach(c=>{ if(!cnt[c.r]) cnt[c.r]=[]; cnt[c.r].push(c); });
+      for(const r in cnt){
+        if(cnt[r].length>=3){
+          const triple=cnt[r].slice(0,3);
+          const combo=evalCombo(triple);
+          if(combo && beats(combo,tableCombo)){bestMove=triple;break;}
+        }
+      }
+    } else if(n===5){
+      // Cari kombinasi 5 kartu yang lebih tinggi (brute force sederhana - cari straight/flush/dll)
+      // AI sederhana: skip untuk 5 kartu (pass)
+      bestMove=null;
     }
-    
-    renderAll();
-});
 
-socket.on('gameOver', ({ winner }) => {
-    if(winner === socket.id) {
-        toast('Kartu Anda habis. ANDA MENANG! 🎉');
+    if(bestMove){
+      const ids=bestMove.map(c=>c.id);
+      oppHand=oppHand.filter(c=>!ids.includes(c.id));
+      table={cards:bestMove, by:'komputer'};
+      const combo=evalCombo(bestMove);
+      toast(`🤖 Komputer menurunkan ${combo.name}`);
+      // Cek apakah Four of a Kind → trigger Revolusi
+      if(combo && combo.name==='Four of a kind'){
+        triggerRevolusi();
+      }
+      if(checkWin('komputer')){renderAll();return;}
+      isMyTurn=true;
+      renderAll();
     } else {
-        toast('Lawan kehabisan kartu. ANDA KALAH. 🥲');
+      // Komputer pass
+      toast('🤖 Komputer pass. Giliran Anda membuka ronde baru.');
+      table=null;
+      isMyTurn=true;
+      renderAll();
     }
-    currentCode = null;
-    setTimeout(() => {
-        location.reload(); 
-    }, 4000);
-});
+  }, 1200); // Delay 1.2 detik agar terasa seperti "berpikir"
+}
 
-socket.on('errorMsg', (msg) => {
-    toast(msg);
-    // Reset tombol-tombol di lobby jika terjadi error
-    $('createRoom').disabled = false;
-    $('createRoom').textContent = 'Buat room baru';
-    $('joinBtn').disabled = false;
-    $('joinBtn').textContent = 'Masuk';
-});
+/* ========= AKSI PEMAIN ========= */
+$('play').onclick=()=>{
+  if(!isMyTurn||gameOver) return;
+  const cs=myHand.filter(c=>selected.has(c.id));
+  myHand=myHand.filter(c=>!selected.has(c.id));
+  selected.clear();
+  table={cards:cs, by:'anda'};
+  const combo=evalCombo(cs);
+  toast(`Anda menurunkan ${combo.name}`);
+  // Cek apakah Four of a Kind → trigger Revolusi
+  if(combo && combo.name==='Four of a kind'){
+    setTimeout(()=>triggerRevolusi(), 600);
+  }
+  renderAll();
+  if(checkWin('anda')) return;
+  // Giliran komputer
+  aiPlay();
+};
 
-socket.on('disconnect', () => {
-    toast('Koneksi terputus. Menyambung ulang…');
-});
+$('pass').onclick=()=>{
+  if(!isMyTurn||gameOver) return;
+  selected.clear();
+  toast('Anda pass.');
+  // Komputer membuka ronde baru
+  table=null;
+  renderAll();
+  aiPlay();
+};
 
-socket.on('connect', () => {
-    // Jika sedang bermain dan reconnect, kembali ke lobby
-    if($('game').classList.contains('active')) {
-        toast('Koneksi terputus. Kembali ke lobby.');
-        currentCode = null;
-        $('game').classList.remove('active');
-        $('lobby').classList.add('active');
-        $('waiting').classList.remove('show');
-        $('createRoom').disabled = false;
-        $('createRoom').textContent = 'Buat room baru';
-        $('joinBtn').disabled = false;
-        $('joinBtn').textContent = 'Masuk';
-    }
-});
+/* ========= START GAME ========= */
+$('startGame').onclick=()=>{
+  const deck=generateDeck();
+  reversed=false; // Reset revolusi
+  myHand=deck.slice(0,26).sort((a,b)=>str(a)-str(b));
+  oppHand=deck.slice(26,52).sort((a,b)=>str(a)-str(b));
+  table=null;
+  isMyTurn=true;
+  gameOver=false;
+  selected.clear();
+  $('revolusiBanner').classList.remove('active');
 
-/* ---- Chat Logic ---- */
+  $('lobby').classList.remove('active');
+  $('game').classList.add('active');
+  toast('Permainan dimulai! Giliran Anda.');
+  renderAll();
+};
+
+/* ========= CHAT LOGIC (DEMO) ========= */
+const AI_RESPONSES = [
+  '🤖 Beep boop... aku sedang mikir!',
+  'Hehe, siap-siap kalah ya! 😏',
+  '💀💀💀',
+  'Tenang... ini semua bagian dari rencana besar 🧬',
+  'Kartuku bagus banget nih 🤫',
+  '🗿',
+  'Wkwkwk kamu serius?? 🤣',
+  'GG WP 🔥',
+  'Aku cuma robot... tapi robot yang menang 🤖💪',
+  '🤡🤡🤡',
+  'Hmm, menarik... 🧐',
+  'Strategi 100 IQ sedang bekerja 🧠',
+  '😭😭 kasihan deh...',
+  'EZ 😎',
+];
+const AI_EMOJI_MAP = {
+  '🤡': ['🤡🤡🤡', 'Siapa yang badut di sini? 😏', '🗿'],
+  '💀': ['RIP 💀💀', '😂 jangan mati dulu!', 'Belum waktunya menyerah! 🔥'],
+  '🤣': ['🗿 biasa aja kali', 'Ketawa aja dulu 🤣', '🙄'],
+  '🗿': ['🗿🗿🗿', 'Poker face mode ON 🤖', '🤡'],
+  '😭': ['Jangan nangis dong 🤣', '💀💀', 'Sini aku kasih tissue 🧻'],
+  '🔥': ['🔥🔥🔥 PANAS!', 'Kena api nih! 🤣', '🗿 bodo amat'],
+};
+
 const EMOJIS_ONLY = /^[\p{Emoji}\s]+$/u;
 let chatOpen = false;
 let unread = 0;
 
 function isEmojiOnly(text) {
-    // Check if text is only emoji characters (1-3 emoji)
     const cleaned = text.trim();
     return EMOJIS_ONLY.test(cleaned) && [...cleaned].filter(c => c.trim()).length <= 3;
 }
@@ -448,9 +553,32 @@ function addChatMsg(text, isMe) {
     $('chatMessages').scrollTop = $('chatMessages').scrollHeight;
 }
 
-function sendChat(text) {
-    if(!text.trim() || !currentCode) return;
-    socket.emit('chatMsg', { code: currentCode, text: text.trim() });
+function aiChatReply(userText) {
+    // Delay balasan komputer 800-2000ms
+    const delay = 800 + Math.random() * 1200;
+    setTimeout(() => {
+        let reply;
+        // Cek apakah user kirim emoji yang ada di map
+        const trimmed = userText.trim();
+        if(AI_EMOJI_MAP[trimmed]) {
+            const options = AI_EMOJI_MAP[trimmed];
+            reply = options[Math.floor(Math.random() * options.length)];
+        } else {
+            reply = AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)];
+        }
+        addChatMsg(reply, false);
+        if(!chatOpen) {
+            unread++;
+            $('chatBadge').textContent = unread;
+            $('chatBadge').classList.add('show');
+        }
+    }, delay);
+}
+
+function sendChatDemo(text) {
+    if(!text.trim()) return;
+    addChatMsg(text.trim(), true);
+    aiChatReply(text.trim());
 }
 
 $('chatToggle').onclick = () => {
@@ -470,31 +598,20 @@ $('chatClose').onclick = () => {
 
 $('chatSend').onclick = () => {
     const val = $('chatInput').value;
-    sendChat(val);
+    sendChatDemo(val);
     $('chatInput').value = '';
     $('chatInput').focus();
 };
 $('chatInput').addEventListener('keydown', (e) => {
     if(e.key === 'Enter') {
-        sendChat($('chatInput').value);
+        sendChatDemo($('chatInput').value);
         $('chatInput').value = '';
     }
 });
 
 document.querySelectorAll('.emoji-btn').forEach(btn => {
-    btn.onclick = () => sendChat(btn.dataset.emoji);
+    btn.onclick = () => sendChatDemo(btn.dataset.emoji);
 });
-
-socket.on('chatMsg', ({ from, text }) => {
-    const isMe = from === socket.id;
-    addChatMsg(text, isMe);
-    if(!isMe && !chatOpen) {
-        unread++;
-        $('chatBadge').textContent = unread;
-        $('chatBadge').classList.add('show');
-    }
-});
-
 </script>
 </body>
 </html>
