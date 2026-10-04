@@ -77,6 +77,7 @@ function broadcastGameState(code, extra) {
             table: room.table,
             myTurn: room.turn === pid,
             passCount: room.passCount,
+            reversed: room.reversed,
             ...extra
         });
     });
@@ -97,7 +98,8 @@ io.on('connection', (socket) => {
             hands: {},
             table: null,
             turn: null,
-            passCount: 0
+            passCount: 0,
+            reversed: false
         };
         playerRoom[socket.id] = code;
         socket.join(code);
@@ -186,6 +188,18 @@ io.on('connection', (socket) => {
             cards: cards,
             by: socket.id
         };
+        
+        // Cek revolusi (Four of a Kind)
+        // Four of a Kind dalam game ini dimainkan sebagai 5 kartu (4 kembar + 1 kicker)
+        if (cards.length === 5) {
+            const cnt = {};
+            cards.forEach(c => cnt[c.r] = (cnt[c.r] || 0) + 1);
+            const groups = Object.entries(cnt).map(([r,k]) => ({r: +r, k})).sort((a,b) => b.k - a.k || b.r - a.r);
+            if(groups[0].k === 4) {
+                room.reversed = !room.reversed;
+                console.log(`Revolusi di-trigger di room ${code}. State: ${room.reversed}`);
+            }
+        }
         
         // Reset pass count karena ada yang turun kartu
         room.passCount = 0;
